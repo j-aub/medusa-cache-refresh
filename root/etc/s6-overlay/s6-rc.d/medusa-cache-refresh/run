@@ -1,0 +1,17 @@
+#!/usr/bin/with-contenv sh
+set -eu
+
+SCENE_EXCEPTIONS_PY='/app/medusa/medusa/scene_exceptions.py'
+
+# patch the scene exception refresh code
+#
+# exceptions_cache.clear()
+#
+# becomes
+#
+# if not series_obj:
+#     exceptions_cache.clear()
+# else:
+#     exceptions_cache[(series_obj.indexer, series_obj.series_id)].clear()
+#
+sed -i 's/exceptions_cache\.clear()/if not series_obj:\n        &\n    else:\n        exceptions_cache[(series_obj.indexer, series_obj.series_id)].clear()/' "$SCENE_EXCEPTIONS_PY"

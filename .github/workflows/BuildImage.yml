@@ -1,0 +1,33 @@
+name: Build Image
+
+on: [push, pull_request, workflow_dispatch]
+
+env:
+  ENDPOINT: "j-aub/medusa-cache-refresh"
+  BRANCH: "master"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v2.3.3
+
+      - name: Build image
+        run: |
+          docker build --no-cache -t ${{ github.sha }} .
+
+      - name: Tag image
+        run: |
+          docker tag ${{ github.sha }} ghcr.io/${ENDPOINT}
+          docker tag ${{ github.sha }} ghcr.io/${ENDPOINT}:${{ github.sha }}
+
+      - name: Login to GitHub Container Registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push tags to GitHub Container Registry
+        run: |
+          docker push ghcr.io/${ENDPOINT}:${{ github.sha }}
+          docker push ghcr.io/${ENDPOINT}
